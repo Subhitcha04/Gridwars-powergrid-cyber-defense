@@ -200,6 +200,7 @@ Where:
 | Grid Guardian | Win with all 12 cities online | +300 |
 
 ---
+---
 
 ## 📚 References
 
