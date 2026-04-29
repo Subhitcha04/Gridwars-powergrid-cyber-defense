@@ -1,9 +1,10 @@
 # ⚡ GRID WARS — Power Grid Cyber Defense Simulator
 
-> A game-theory strategy game where you defend a national power grid against state-sponsored cyber attacks. Built with React.
+> A game-theory strategy game where you defend a national power grid against state-sponsored cyber attacks. Built with React + Vite.
 
 ![Game Theory](https://img.shields.io/badge/Game_Theory-Stackelberg_%7C_Bayesian_%7C_Markov-blue)
 ![React](https://img.shields.io/badge/React-18-61dafb)
+![Vite](https://img.shields.io/badge/Vite-5-646cff)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 ---
@@ -36,7 +37,7 @@ A **step-by-step tutorial** automatically triggers on your first game. You can a
 
 ## 📐 Game Theory Concepts
 
-This isn't just a game with "game theory" in the title — every core mechanic is driven by a formal mathematical model:
+Every core mechanic is driven by a formal mathematical model:
 
 ### Stackelberg Leader-Follower Model
 You (the Defender) are the **Stackelberg Leader** — you commit your defensive posture first, and it's publicly visible. The AI attacker acts as the **Follower**, observing your deployments and computing a **best-response** by targeting your weakest, most connected cities. This mirrors real cybersecurity where organizations publish compliance certifications (ISO 27001, SOC 2) that signal their security investments.
@@ -59,24 +60,354 @@ The power grid has a real **graph topology** with edges representing transmissio
 
 ---
 
+## 🧬 Architecture — Game Theory Engine
+
+### System Architecture
+
+```mermaid
+graph TB
+    subgraph PLAYER["🎮 PLAYER (Stackelberg Leader)"]
+        UI[React UI Layer]
+        AUTH[Authentication]
+        SELECT[Defense Selection]
+        DEPLOY[City Deployment]
+    end
+
+    subgraph ENGINE["⚙️ GAME THEORY ENGINE"]
+        direction TB
+        SM[State Machine<br/>Round Controller]
+        
+        subgraph STACKELBERG["📐 Stackelberg Module"]
+            COMMIT[Leader Commits<br/>Defense Posture]
+            BR[Follower Best-Response<br/>Target Selection]
+        end
+        
+        subgraph BAYESIAN["🧠 Bayesian Module"]
+            PRIOR[Prior Beliefs<br/>P₀ Script Kiddie = 0.5<br/>P₀ APT = 0.5]
+            LIKELIHOOD[Likelihood Tables<br/>P attack │ type]
+            POSTERIOR[Posterior Update<br/>Bayes Theorem]
+        end
+        
+        subgraph MARKOV["⛓ Markov Module"]
+            TMATRIX[4×4 Transition Matrix]
+            REINFORCE[Success Reinforcement<br/>M_ii += 0.05]
+            PREDICT[Next-State Prediction]
+        end
+        
+        subgraph CASCADE["⚡ Cascade Engine"]
+            TOPO[Grid Topology<br/>12 Nodes, 19 Edges]
+            PROP[Failure Propagation<br/>Probability Check]
+            DOMINO[Domino Effect<br/>Neighbor Overload]
+        end
+        
+        subgraph PAYOFF["💰 Zero-Sum Resolver"]
+            DEF_ROLL[Defense Roll<br/>effectiveness + random]
+            ATK_ROLL[Attack Roll<br/>skill + type bonus]
+            RESOLVE[Compare Rolls<br/>Breach or Defend]
+        end
+    end
+
+    subgraph ATTACKER["🕵️ AI ATTACKER (Stackelberg Follower)"]
+        OBSERVE[Observe Defenses]
+        SCORE[Score Cities<br/>vulnerability × 2<br/>+ connections × 1.5<br/>+ population / 5]
+        CHOOSE[Choose Targets]
+    end
+
+    subgraph FEEDBACK["📊 FEEDBACK LOOP"]
+        INTEL[Intel Panel<br/>Bayesian Bars + Markov Bars]
+        RESULT[Round Result Modal]
+        XP[XP + Achievement System]
+        DEBRIEF[Game Theory Debrief]
+    end
+
+    UI --> AUTH --> SELECT --> DEPLOY
+    DEPLOY --> COMMIT
+    COMMIT --> OBSERVE
+    OBSERVE --> SCORE --> CHOOSE
+    CHOOSE --> SM
+    SM --> PAYOFF
+    DEF_ROLL --> RESOLVE
+    ATK_ROLL --> RESOLVE
+    RESOLVE --> CASCADE
+    TOPO --> PROP --> DOMINO
+    RESOLVE --> BAYESIAN
+    PRIOR --> POSTERIOR
+    LIKELIHOOD --> POSTERIOR
+    RESOLVE --> MARKOV
+    TMATRIX --> REINFORCE --> PREDICT
+    POSTERIOR --> INTEL
+    PREDICT --> INTEL
+    RESOLVE --> RESULT
+    RESULT --> XP
+    XP --> DEBRIEF
+    DEBRIEF --> UI
+
+    style PLAYER fill:#0d1b2a,stroke:#06b6d4,color:#e2e8f0
+    style ENGINE fill:#0a1628,stroke:#8b5cf6,color:#e2e8f0
+    style ATTACKER fill:#1a0a0a,stroke:#ef4444,color:#e2e8f0
+    style FEEDBACK fill:#0a1a0a,stroke:#34d399,color:#e2e8f0
+    style STACKELBERG fill:#0d1b3a,stroke:#06b6d4,color:#e2e8f0
+    style BAYESIAN fill:#1a0d2e,stroke:#a78bfa,color:#e2e8f0
+    style MARKOV fill:#0d1b2a,stroke:#06b6d4,color:#e2e8f0
+    style CASCADE fill:#1a0f0a,stroke:#f59e0b,color:#e2e8f0
+    style PAYOFF fill:#0d1a1a,stroke:#34d399,color:#e2e8f0
+```
+
+### Round Lifecycle — Game Theory Flow
+
+```mermaid
+sequenceDiagram
+    participant P as 🎮 Player (Leader)
+    participant E as ⚙️ Game Engine
+    participant S as 📐 Stackelberg
+    participant A as 🕵️ AI Attacker (Follower)
+    participant B as 🧠 Bayesian Module
+    participant M as ⛓ Markov Module
+    participant C as ⚡ Cascade Engine
+
+    rect rgb(13, 27, 42)
+        Note over P,E: PHASE 1 — Stackelberg Commitment
+        P->>E: Deploy defenses to cities
+        E->>S: Lock defense posture (publicly visible)
+        S-->>A: Attacker observes deployments
+    end
+
+    rect rgb(26, 10, 10)
+        Note over A,M: PHASE 2 — Attacker Best-Response
+        M->>A: Markov transition → select attack type
+        A->>S: Score all cities (vulnerability + topology)
+        S->>A: Return top-N weakest targets
+        A->>E: Launch attack on selected cities
+    end
+
+    rect rgb(13, 26, 26)
+        Note over E,C: PHASE 3 — Zero-Sum Resolution
+        E->>E: Roll defense vs attack for each target
+        E->>C: Pass breached cities
+        C->>C: Check neighbors (cascade probability)
+        C->>E: Return cascade victims
+    end
+
+    rect rgb(26, 13, 46)
+        Note over B,M: PHASE 4 — Learning & Adaptation
+        E->>B: Observed attack type + success rate
+        B->>B: Bayes' theorem → update P(APT)
+        E->>M: Attack outcome (success/fail)
+        M->>M: Reinforce transition matrix
+    end
+
+    rect rgb(10, 26, 10)
+        Note over P,E: PHASE 5 — Feedback & Next Round
+        E->>P: Show result modal + theory explanation
+        B-->>P: Updated Bayesian bars
+        M-->>P: Updated Markov predictions
+        E->>P: XP + achievements + score
+        P->>E: Continue → next round (budget refresh)
+    end
+```
+
+### Bayesian Update Flow
+
+```mermaid
+graph LR
+    subgraph ROUND_N["Round N"]
+        OBS["Observed Attack<br/>e.g. SCADA Exploit"]
+        SUCCESS["Breach Rate<br/>2/2 targets breached"]
+    end
+
+    subgraph LIKELIHOOD["Likelihood Tables"]
+        L_APT["P(SCADA | APT) = 0.70"]
+        L_SK["P(SCADA | Script Kiddie) = 0.30"]
+    end
+
+    subgraph PRIOR["Prior Beliefs"]
+        P_APT["P(APT) = 0.50"]
+        P_SK["P(SK) = 0.50"]
+    end
+
+    subgraph BAYES["Bayes' Theorem"]
+        CALC["P(APT|obs) =<br/>P(obs|APT) × P(APT)<br/>─────────────────<br/>P(obs)"]
+    end
+
+    subgraph POSTERIOR["Updated Beliefs"]
+        POST_APT["P(APT) = 0.70 ⬆"]
+        POST_SK["P(SK) = 0.30 ⬇"]
+    end
+
+    OBS --> L_APT
+    OBS --> L_SK
+    SUCCESS --> CALC
+    L_APT --> CALC
+    L_SK --> CALC
+    P_APT --> CALC
+    P_SK --> CALC
+    CALC --> POST_APT
+    CALC --> POST_SK
+
+    style ROUND_N fill:#1a0f0a,stroke:#f59e0b,color:#e2e8f0
+    style LIKELIHOOD fill:#1a0d2e,stroke:#a78bfa,color:#e2e8f0
+    style PRIOR fill:#0d1b2a,stroke:#06b6d4,color:#e2e8f0
+    style BAYES fill:#0d1a1a,stroke:#34d399,color:#e2e8f0
+    style POSTERIOR fill:#0a1a0a,stroke:#34d399,color:#e2e8f0
+```
+
+### Markov Chain — Attacker Strategy Evolution
+
+```mermaid
+stateDiagram-v2
+    [*] --> SCADA : Initial State (random)
+    
+    SCADA --> SCADA : 0.40 (self-loop)
+    SCADA --> Phishing : 0.25
+    SCADA --> Firmware : 0.20
+    SCADA --> Insider : 0.15
+
+    Phishing --> SCADA : 0.15
+    Phishing --> Phishing : 0.35 (self-loop)
+    Phishing --> Firmware : 0.25
+    Phishing --> Insider : 0.25
+
+    Firmware --> SCADA : 0.20
+    Firmware --> Phishing : 0.20
+    Firmware --> Firmware : 0.40 (self-loop)
+    Firmware --> Insider : 0.20
+
+    Insider --> SCADA : 0.25
+    Insider --> Phishing : 0.30
+    Insider --> Firmware : 0.20
+    Insider --> Insider : 0.25 (self-loop)
+```
+
+> **Reinforcement rule:** When an attack type succeeds (breaches a city), `M[current][current] += 0.05` and the row is renormalized. This makes the attacker more likely to repeat successful strategies — creating exploitable patterns for observant players.
+
+### Cascade Failure — Network Topology
+
+```mermaid
+graph TD
+    C0["🏛️ Capital Hub<br/>8.2M ★ Critical"]
+    C1["📡 North Relay<br/>2.1M"]
+    C2["🏙️ East Metro<br/>5.5M"]
+    C3["⚓ Port City<br/>4.8M"]
+    C4["🏭 South Works<br/>3.9M"]
+    C5["🌄 West Valley<br/>2.7M"]
+    C6["⛰️ Mountain Base<br/>1.5M"]
+    C7["🌵 Desert Plant<br/>1.8M"]
+    C8["🌊 River Station<br/>3.2M"]
+    C9["🔆 Coastal Array<br/>2.4M"]
+    C10["🌾 Plains Grid<br/>2.0M"]
+    C11["💻 Tech District<br/>4.1M"]
+
+    C0 --- C1
+    C0 --- C2
+    C0 --- C10
+    C0 --- C11
+    C0 --- C8
+    C1 --- C6
+    C1 --- C11
+    C2 --- C3
+    C2 --- C11
+    C2 --- C9
+    C3 --- C4
+    C3 --- C9
+    C4 --- C8
+    C4 --- C7
+    C5 --- C6
+    C5 --- C10
+    C5 --- C7
+    C7 --- C10
+    C8 --- C10
+
+    style C0 fill:#06b6d4,stroke:#06b6d4,color:#000
+    style C2 fill:#34d399,stroke:#34d399,color:#000
+    style C3 fill:#34d399,stroke:#34d399,color:#000
+    style C11 fill:#34d399,stroke:#34d399,color:#000
+    style C4 fill:#f59e0b,stroke:#f59e0b,color:#000
+    style C8 fill:#f59e0b,stroke:#f59e0b,color:#000
+    style C1 fill:#64748b,stroke:#64748b,color:#fff
+    style C5 fill:#64748b,stroke:#64748b,color:#fff
+    style C6 fill:#64748b,stroke:#64748b,color:#fff
+    style C7 fill:#64748b,stroke:#64748b,color:#fff
+    style C9 fill:#64748b,stroke:#64748b,color:#fff
+    style C10 fill:#64748b,stroke:#64748b,color:#fff
+```
+
+> **Cascade rule:** When a city goes offline, each of its **undefended neighbors** has a probability (15%–45% depending on difficulty) of overloading and going dark too. Capital Hub (5 connections) and East Metro (4 connections) are the highest-risk cascade nodes — losing them without neighbor protection can trigger a domino chain.
+
+### Stackelberg Decision Tree
+
+```mermaid
+graph TD
+    ROOT["🎮 Defender<br/>(Stackelberg Leader)<br/>Commits Defense Posture"]
+    
+    ROOT --> D1["Deploy Firewall<br/>to City X"]
+    ROOT --> D2["Deploy IDS<br/>to City Y"]  
+    ROOT --> D3["Deploy Air-Gap<br/>to City Z"]
+    ROOT --> DN["... other allocations"]
+
+    D1 --> OBS1["🕵️ Attacker Observes"]
+    D2 --> OBS2["🕵️ Attacker Observes"]
+    D3 --> OBS3["🕵️ Attacker Observes"]
+    DN --> OBSN["🕵️ Attacker Observes"]
+
+    OBS1 --> BR1["Best-Response:<br/>Target undefended cities<br/>with most connections"]
+    OBS2 --> BR2["Best-Response:<br/>Use attack type where<br/>defense is weakest"]
+    OBS3 --> BR3["Best-Response:<br/>Avoid air-gapped city,<br/>hit neighbors instead"]
+    OBSN --> BRN["Best-Response:<br/>Maximize expected<br/>cascade damage"]
+
+    BR1 --> PAY1["Payoff Resolution<br/>(Zero-Sum)"]
+    BR2 --> PAY2["Payoff Resolution<br/>(Zero-Sum)"]
+    BR3 --> PAY3["Payoff Resolution<br/>(Zero-Sum)"]
+    BRN --> PAYN["Payoff Resolution<br/>(Zero-Sum)"]
+
+    style ROOT fill:#06b6d4,stroke:#06b6d4,color:#000
+    style OBS1 fill:#ef4444,stroke:#ef4444,color:#fff
+    style OBS2 fill:#ef4444,stroke:#ef4444,color:#fff
+    style OBS3 fill:#ef4444,stroke:#ef4444,color:#fff
+    style OBSN fill:#ef4444,stroke:#ef4444,color:#fff
+    style BR1 fill:#f59e0b,stroke:#f59e0b,color:#000
+    style BR2 fill:#f59e0b,stroke:#f59e0b,color:#000
+    style BR3 fill:#f59e0b,stroke:#f59e0b,color:#000
+    style BRN fill:#f59e0b,stroke:#f59e0b,color:#000
+    style PAY1 fill:#34d399,stroke:#34d399,color:#000
+    style PAY2 fill:#34d399,stroke:#34d399,color:#000
+    style PAY3 fill:#34d399,stroke:#34d399,color:#000
+    style PAYN fill:#34d399,stroke:#34d399,color:#000
+```
+
+---
+
 ## 🏗️ Project Structure
 
 ```
 Gridwars-powergrid-cyber-defense/
-├── GridWars.jsx          # Complete React application (single-file)
-└── README.md             # Documentation
+├── node_modules/             # Dependencies (auto-generated)
+├── public/                   # Static assets
+├── src/
+│   ├── assets/               # Images, icons, static resources
+│   ├── App.css               # Global app styles
+│   ├── App.jsx               # Main game component (all game logic)
+│   ├── index.css             # Root-level styles
+│   └── main.jsx              # React entry point
+├── .gitignore                # Git ignore rules
+├── eslint.config.js          # ESLint configuration
+├── index.html                # HTML entry point
+├── package-lock.json         # Dependency lock file
+├── package.json              # Project metadata & scripts
+├── README.md                 # This file
+└── vite.config.js            # Vite bundler configuration
 ```
 
 ### Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
+| Bundler | Vite 5 |
 | Frontend | React 18 (Functional Components + Hooks) |
 | Animations | Hand-crafted SVG with frame-based animation |
 | Styling | CSS-in-JS (co-located styles) |
 | Game Engine | Custom state machine (Bayesian + Markov + Stackelberg) |
 | Fonts | DM Sans + Sora (Google Fonts) |
-| Dependencies | Zero external packages |
+| Linting | ESLint |
 
 ---
 
@@ -115,27 +446,35 @@ Gridwars-powergrid-cyber-defense/
 
 ## 🚀 Getting Started
 
-### Option 1 — Claude.ai (Instant)
-Upload `GridWars.jsx` as a React artifact — it renders directly.
+### Prerequisites
+- [Node.js](https://nodejs.org/) (v18 or above)
+- npm (comes with Node.js)
 
-### Option 2 — Create React App
-```bash
-npx create-react-app grid-wars
-cd grid-wars
-cp /path/to/GridWars.jsx src/App.jsx
-npm start
-```
+### Installation
 
-### Option 3 — Vite (Recommended)
 ```bash
-npm create vite@latest grid-wars -- --template react
-cd grid-wars
-cp /path/to/GridWars.jsx src/App.jsx
+# Clone the repository
+git clone https://github.com/Subhitcha04/Gridwars-powergrid-cyber-defense.git
+
+# Navigate into the project
+cd Gridwars-powergrid-cyber-defense
+
+# Install dependencies
 npm install
+
+# Start the development server
 npm run dev
 ```
 
 App opens at `http://localhost:5173`
+
+### Build for Production
+
+```bash
+npm run build
+```
+
+Output goes to the `dist/` folder — deploy it anywhere (Vercel, Netlify, GitHub Pages).
 
 ---
 
@@ -200,6 +539,7 @@ Where:
 | Grid Guardian | Win with all 12 cities online | +300 |
 
 ---
+
 ---
 
 ## 📚 References
